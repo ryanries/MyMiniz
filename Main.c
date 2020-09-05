@@ -4,6 +4,7 @@
 // A simple command-line tool that adds and extracts files to and from compressed archives,
 // using Miniz by Rich Geldreich <richgel99@gmail.com>.
 
+#pragma warning(disable: 5045)	// Disable warning about Spectre/Meltdown CPU vulnerability mitigation.
 
 #pragma warning(push, 0)
 
@@ -153,13 +154,70 @@ int main(int argc, char* argv[])
 	}
 	else if (Operation == OPERATION_EXTRACT)
 	{
+		BOOL FileFoundInArchive = FALSE;
+
+		mz_zip_archive ZipArchive = { 0 };		
+
+		mz_zip_error MZError = MZ_ZIP_NO_ERROR;
+
 		if (FileExists(ArchiveName) == FALSE)
 		{
 			printf("ERROR: Archive %s does not exist!\n", ArchiveName);
 
-			return(0);
+			return(ERROR_FILE_NOT_FOUND);
 		}
 
+		if ((mz_zip_reader_init_file(&ZipArchive, ArchiveName, 0)) == FALSE)
+		{
+			MZError = mz_zip_get_last_error(&ZipArchive);
+
+			printf("ERROR: mz_zip_reader_init_file failed with error code %d!\n", MZError);
+
+			return(MZError);
+		}
+
+		printf("[-] Archive %s opened for reading.\n", ArchiveName);
+
+		for (int FileIndex = 0; FileIndex < (int)mz_zip_reader_get_num_files(&ZipArchive); FileIndex++)
+		{
+			mz_zip_archive_file_stat CompressedFileStatistics = { 0 };			
+
+			if (mz_zip_reader_file_stat(&ZipArchive, FileIndex, &CompressedFileStatistics) == FALSE)
+			{
+				MZError = mz_zip_get_last_error(&ZipArchive);
+
+				printf("ERROR: mz_zip_reader_file_stat failed with error code %d!\n", MZError);
+
+				return(MZError);
+			}
+
+			if (_stricmp(CompressedFileStatistics.m_filename, FullyQualifiedFileName) == 0)
+			{
+				FileFoundInArchive = TRUE;
+
+				printf("[-] File %s found in archive %s.\n", FullyQualifiedFileName, ArchiveName);
+
+				if ((mz_zip_reader_extract_to_file(&ZipArchive, FileIndex, FullyQualifiedFileName, 0)) == FALSE)
+				{
+					MZError = mz_zip_get_last_error(&ZipArchive);
+
+					printf("ERROR: mz_zip_reader_extract_to_file failed with error code %d!\n", MZError);
+
+					return(MZError);
+				}
+				else
+				{
+					printf("[-] Successfully extracted file %s.\n", FullyQualifiedFileName);
+				}
+				
+				break;
+			}
+		}
+
+		if (FileFoundInArchive == FALSE)
+		{
+			printf("ERROR: File %s not found in archive %s!\n", FullyQualifiedFileName, ArchiveName);
+		}
 	}
 	else
 	{
