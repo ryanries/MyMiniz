@@ -25,33 +25,19 @@
  **************************************************************************/
 
 #pragma warning(disable: 4548)
-
 #pragma warning(disable: 5045)
-
 #pragma warning(disable: 26451)
-
 #pragma warning(disable: 4024)
-
 #pragma warning(disable: 4820)
-
 #pragma warning(disable: 4255)
-
 #pragma warning(disable: 4477)
-
 #pragma warning(disable: 4127)
-
 #pragma warning(disable: 5045)
-
 #pragma warning(disable: 4061)
-
 #pragma warning(disable: 6386)
-
 #pragma warning(disable: 6297)
-
 #pragma warning(disable: 4711)
-
 #pragma warning(disable: 4710)
-
 #pragma warning(disable: 4100)
 
 #include  "miniz.h"
